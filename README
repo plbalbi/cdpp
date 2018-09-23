@@ -1,0 +1,139 @@
+1. Requisitos
+
+ * gcc (con soporte de C++11)
+ * bison
+ * GNU make
+
+En caso de estar utilizando Ubuntu (o alguna versión de Linux basada en
+Debian), es posible instalar estas dependencias de la siguiente forma:
+
+$ sudo apt-get install build-essential bison
+
+
+2. Simulación de atómicos
+
+A modo ilustrativo, supongamos primero que el archivo comprimido conteniendo
+el código fuente del simulador, 'cdpp_kernel.tgz', se descargó y descomprimió
+en el directorio '/home/user/cdpp'. De esta forma, al correr los siguientes
+comandos debería obtenerse una salida equivalente a la mostrada:
+
+$ cd /home/user/cdpp
+$ ls
+cdpp_kernel  configure  examples  files  README
+
+Para simular modelos con comportamiento definido por el usuario, primero es
+necesario correr el script de configuración incluido en tal directorio:
+
+$ source ./configure
+
+Observar lo siguiente:
+
+  * El directorio de trabajo de la consola es '/home/user/cdpp' (esto puede
+    corroborarse ejectuando el comando 'pwd').
+
+  * El uso del comando 'source' es fundamental para lograr una configuración
+    correcta y completa. También tener en cuenta que sólo basta correr este
+    script una única vez.
+
+Luego, supongamos que deseamos compilar un modelo atómico cuyo código fuente
+está en '/home/user/model/'. Para facilitar la tarea, el directorio
+'/home/user/cdpp/files' incluye un Makefile y un template de registración de
+modelos atómicos (ver más abajo). Sugerimos copiar primero estos archivos,
+
+$ cp files/* /home/user/model
+
+Antes de compilar, es importante registrar el modelo atómico en cuestión en el
+kernel del simulador. El archivo 'reg.cpp' en '/home/user/cdpp/files' muestra
+cómo hacer esto de manera sencilla. De utilizarlo, sugerimos seguir las
+instrucciones en los comentarios TODO. En particular, considerar lo siguiente:
+
+ * Proveer una inclusión del header C++ correspondiente el modelo, sustituyendo
+   la línea '#include "mi_header.h"' por el nombre del header utilizado.
+
+ * Implementar la función
+
+   void register_atomics_on(ParallelModelAdmin &admin)
+
+   que, típicamente, se logra con una línea similar a la siguiente:
+
+   admin.registerAtomic(NewAtomicFunction<ClaseDelModelo>(), "Nombre del modelo");
+
+   El identificador 'ClaseDelModelo' debe naturalmente reemplazarse por el nombre
+   de la clase C++ que implementa el modelo atómico utilizado, mientras que 
+   "Nombre del modelo" debe hacer referencia al nombre propiamente dicho (es decir,
+   el string C++ devuelto por el método className()).
+
+Una vez hecho lo anterior, ya es posible compilar a través de 'make':
+
+$ cd /home/user/model
+$ make
+
+El binario ejecutable del simulador con el modelo atómico propiamente
+registrado quedará alojado en '/home/user/model/bin/'. De esta forma, podrá
+simularse de la siguiente manera, asumiendo que la descripción del modelo
+está en 'model.ma':
+
+$ bin/cd++ -mmodel.ma -ooutput
+
+Notar que la salida de la simulación quedará alojada en el archivo 'output'
+dentro del directorio actual.
+
+2.1. Ejemplo
+
+Para poner lo anterior en un contexto de uso más concreto, veamos cómo compilar
+el ejemplo 'pulse' incluido en '/home/user/cdpp/examples/pulse'. Luego de hacer
+la configuración según lo indicado en la primera parte de la sección previa, 
+deberemos dirigirnos al directorio donde está el código fuente del modelo:
+
+$ cd /home/user/cdpp/examples/pulse/src
+
+Observar que contamos con el header del modelo, 'pulse.h', su respectiva
+implementación, 'pulse.cpp', el Makefile con las reglas de compilación y por
+último el código de registración del modelo en 'reg.cpp':
+
+$ ls
+Makefile  pulse.cpp  pulse.h  reg.cpp
+
+Al editar este último archivo, podremos ver que sigue los lineamientos de la
+sección anterior. En particular, 
+
+  * La inclusión del header viene dada por '#include "pulse.h"'.
+
+  * La línea de código donde se registra el modelo viene dada por
+
+    admin.registerAtomic(NewAtomicFunction<Pulse>(), ATOMIC_MODEL_NAME);
+
+    donde 'Pulse' es precisamente el nombre de la clase C++ declarada en
+    'pulse.h' y la macro 'ATOMIC_MODEL_NAME' indica el nombre del modelo 
+    utilizado en dicha clase.
+
+Mediante el comando 'make' podremos compilar el modelo:
+
+$ make
+
+Si todo salió bien, deberíamos poder encontrar el simulador en el subdirectorio
+'bin':
+
+$ ls bin
+cd++  libsimu.a  pulse.o  reg.o
+
+Ahora podemos correr la simulación utilizando la descripción dada por el
+archivo de extensión 'ma' en '/home/user/cdpp/examples/pulse':
+
+$ bin/cd++ -m../pulse.ma -e../pulse.ev -ooutput
+
+El archivo de eventos 'pulse.ev' contiene una señal de terminación enviada a
+uno de los puertos del modelo. La salida generada puede verse en el archivo
+'output':
+
+$ head output
+00:00:01:000:0 out_port [36, 0, 1]
+00:00:02:000:0 out_port [38, 0, 1]
+00:00:03:000:0 out_port [21, 0, 1]
+00:00:04:000:0 out_port [40, 0, 1]
+00:00:05:000:0 out_port [54, 0, 1]
+00:00:06:000:0 out_port [46, 0, 1]
+00:00:07:000:0 out_port [20, 0, 1]
+00:00:08:000:0 out_port [44, 0, 1]
+00:00:09:000:0 out_port [86, 0, 1]
+00:00:10:000:0 out_port [6, 0, 1]
