@@ -14,6 +14,9 @@
 #define _TOKEN_ITERATOR_HPP
 
 #include <string>
+#if defined __GNUC__ || defined __APPLE__
+    #include <iostream>
+#endif
 #include <iterator>
 
 class TokenIterator

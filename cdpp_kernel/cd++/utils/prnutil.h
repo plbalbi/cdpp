@@ -23,18 +23,6 @@
 
 /** inline **/
 
-template< class T1, class T2 >          
-inline
-std::ostream &operator<<( std::ostream &out,  const std::map< T1, T2, std::less< T1 > > &c )
-{
-	typename std::map< T1, T2, std::less< T1 > >::const_iterator cursor( c.begin() ) ;
-
-	for( ; cursor != c.end() ; cursor ++ )
-		out << cursor->first << " = " << cursor->second << std::endl ;
-
-	return out;
-}
-
 template< class T >
 inline
 std::ostream &operator<<( std::ostream &out, const std::list< T > &l )
@@ -56,3 +44,15 @@ std::ostream &operator <<( std::ostream &out, const std::pair<T1, T2> &p )
 }
 
 #endif   //__PRNUTIL_H 
+
+template< class T1, class T2 >          
+inline
+std::ostream &operator<<( std::ostream &out,  const std::map< T1, T2, std::less< T1 > > &c )
+{
+	typename std::map< T1, T2, std::less< T1 > >::const_iterator cursor( c.begin() ) ;
+
+	for( ; cursor != c.end() ; cursor ++ )
+		out << cursor->first << " = " << cursor->second << std::endl ;
+
+	return out;
+}
